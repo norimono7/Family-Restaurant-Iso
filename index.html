@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ファミレス磯 | タッチパネル注文</title>
+    <style>
+      :root {
+        --ink: #263238;
+        --muted: #647278;
+        --paper: #fffdf8;
+        --cream: #f5ead6;
+        --orange: #e87532;
+        --orange-dark: #b94d16;
+        --teal: #167b78;
+        --teal-dark: #0c5d5a;
+        --line: #e4d8c6;
+        --shadow: 0 12px 30px rgb(61 42 21 / 10%);
+        font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+        color: var(--ink);
+        background: #dcefed;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; }
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .8rem clamp(1rem, 3vw, 2.5rem);
+        color: white;
+        background: var(--teal-dark);
+      }
+      .brand { display: flex; align-items: center; gap: .75rem; }
+      .brand-mark {
+        display: grid;
+        width: 3rem;
+        height: 3rem;
+        place-items: center;
+        border-radius: 50%;
+        color: white;
+        background: var(--orange);
+        font-size: 1.65rem;
+      }
+      .brand h1 { margin: 0; font-size: clamp(1.1rem, 3vw, 1.5rem); }
+      .brand p { margin: .15rem 0 0; color: #b8d9d5; font-size: .78rem; }
+      .status { padding: .5rem .85rem; border: 1px solid #65aca7; border-radius: 999px; font-size: .82rem; }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem);
+        gap: 1rem;
+        width: min(1400px, 100%);
+        margin: 0 auto;
+        padding: 1rem;
+      }
+      .panel { border: 1px solid var(--line); border-radius: 18px; background: var(--paper); box-shadow: var(--shadow); }
+      .main-panel { padding: clamp(1rem, 2.5vw, 2rem); }
+      .hero {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.2rem;
+        padding: clamp(1rem, 3vw, 2rem);
+        border-radius: 16px;
+        color: white;
+        background:
+          linear-gradient(110deg, rgb(12 93 90 / 95%), rgb(22 123 120 / 85%)),
+          repeating-linear-gradient(45deg, transparent, transparent 12px, rgb(255 255 255 / 5%) 12px, rgb(255 255 255 / 5%) 24px);
+      }
+      .hero h2 { margin: 0; font-size: clamp(1.45rem, 4vw, 2.5rem); }
+      .hero p { margin: .45rem 0 0; color: #c9ece8; }
+      .hero-icon { font-size: clamp(3rem, 9vw, 6rem); line-height: 1; }
+
+      .order-box { margin-bottom: 1.2rem; padding: 1rem; border-radius: 14px; background: var(--cream); }
+      .order-box h3, .section-heading { margin: 0 0 .65rem; }
+      .code-form { display: flex; gap: .6rem; }
+      .code-form input {
+        min-width: 0;
+        flex: 1;
+        padding: .8rem 1rem;
+        border: 2px solid #d5c4aa;
+        border-radius: 10px;
+        background: white;
+        font-size: 1.2rem;
+        letter-spacing: .08em;
+      }
+      .primary, .secondary, .danger {
+        border: 0;
+        border-radius: 10px;
+        padding: .75rem 1rem;
+        font-weight: 700;
+      }
+      .primary { color: white; background: var(--orange); }
+      .primary:hover { background: var(--orange-dark); }
+      .secondary { color: var(--teal-dark); background: #d8efec; }
+      .danger { color: #9c2c22; background: #fde3df; }
+      .hint { margin: .55rem 0 0; color: var(--muted); font-size: .82rem; }
+      .message { min-height: 1.2rem; margin: .55rem 0 0; color: var(--orange-dark); font-weight: 700; }
+
+      .category-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; overflow-x: auto; }
+      .tab {
+        flex: 0 0 auto;
+        padding: .65rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--teal-dark);
+        background: white;
+      }
+      .tab.active { border-color: var(--teal); color: white; background: var(--teal); }
+      .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: .8rem; }
+      .menu-card {
+        display: flex;
+        min-height: 11rem;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: white;
+        transition: transform .15s, box-shadow .15s;
+      }
+      .menu-card:hover { transform: translateY(-2px); box-shadow: 0 7px 18px rgb(61 42 21 / 12%); }
+      .food-icon { font-size: 2.5rem; }
+      .menu-card h4 { margin: .4rem 0 .2rem; font-size: 1.05rem; }
+      .menu-card p { margin: 0; color: var(--muted); font-size: .8rem; }
+      .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .8rem; }
+      .price { color: var(--orange-dark); font-weight: 800; white-space: nowrap; }
+      .add-button { padding: .5rem .7rem; border: 0; border-radius: 8px; color: white; background: var(--teal); font-weight: 700; }
+      .add-button:hover { background: var(--teal-dark); }
+
+      .side-panel { align-self: start; padding: 1rem; position: sticky; top: 1rem; }
+      .side-panel h3 { margin: 0; }
+      .cart-note { margin: .35rem 0 1rem; color: var(--muted); font-size: .8rem; }
+      .cart-items { display: grid; gap: .65rem; max-height: 19rem; overflow-y: auto; }
+      .empty { padding: 1.2rem .5rem; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); text-align: center; }
+      .cart-row { display: grid; grid-template-columns: 1fr auto; gap: .5rem; padding-bottom: .6rem; border-bottom: 1px solid #eee5d8; }
+      .cart-row strong { display: block; font-size: .9rem; }
+      .cart-row small { color: var(--muted); }
+      .remove { border: 0; color: #a33b2d; background: transparent; font-size: .8rem; }
+      .total { display: flex; justify-content: space-between; margin: 1rem 0; padding-top: .8rem; border-top: 2px solid var(--line); font-size: 1.15rem; font-weight: 800; }
+      .checkout { width: 100%; font-size: 1.05rem; }
+      .cart-actions { display: flex; gap: .5rem; margin-top: .55rem; }
+      .cart-actions button { flex: 1; }
+
+      .code-table-wrap { margin-top: 1.5rem; }
+      .code-table-wrap summary { cursor: pointer; color: var(--teal-dark); font-weight: 800; }
+      .code-table { width: 100%; margin-top: .7rem; border-collapse: collapse; font-size: .84rem; }
+      .code-table th, .code-table td { padding: .55rem .4rem; border-bottom: 1px solid var(--line); text-align: left; }
+      .code-table th { color: var(--muted); font-size: .75rem; }
+      .code-table td:first-child { color: var(--orange-dark); font-weight: 800; }
+
+      dialog { width: min(92vw, 30rem); padding: 0; border: 0; border-radius: 18px; box-shadow: 0 25px 70px rgb(0 0 0 / 28%); }
+      dialog::backdrop { background: rgb(12 40 39 / 58%); }
+      .dialog-body { padding: 1.4rem; }
+      .dialog-body h2 { margin: 0 0 .4rem; }
+      .payment-box { margin: 1rem 0; padding: 1rem; border-radius: 12px; background: var(--cream); }
+      .payment-box p { display: flex; justify-content: space-between; margin: .45rem 0; }
+      .dialog-actions { display: flex; gap: .6rem; }
+      .dialog-actions button { flex: 1; }
+      .success { color: var(--teal-dark); }
+
+      @media (max-width: 800px) {
+        .layout { grid-template-columns: 1fr; }
+        .side-panel { position: static; }
+      }
+      @media (max-width: 430px) {
+        .code-form { flex-wrap: wrap; }
+        .code-form input, .code-form .primary { width: 100%; }
+        .hero-icon { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">磯</div>
+        <div>
+          <h1>ファミレス磯</h1>
+          <p>タッチパネル注文システム</p>
+        </div>
+      </div>
+      <div class="status">● お席で注文受付中</div>
+    </header>
+
+    <div class="layout">
+      <main class="panel main-panel">
+        <section class="hero">
+          <div>
+            <h2>いらっしゃいませ！</h2>
+            <p>食べたいメニューをタッチしてお選びください。</p>
+          </div>
+          <div class="hero-icon">🍚</div>
+        </section>
+
+        <section class="order-box" aria-labelledby="code-title">
+          <h3 id="code-title">番号から注文</h3>
+          <form class="code-form" id="code-form">
+            <input id="code-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="例：1001" aria-label="メニュー番号">
+            <button class="primary" type="submit">番号を表示</button>
+          </form>
+          <p class="hint">定食は1000番台、寿司は100番台の番号です。表示された商品をタッチするとかごに入ります。</p>
+          <p class="message" id="code-message" aria-live="polite"></p>
+        </section>
+
+        <section aria-labelledby="menu-title">
+          <h3 class="section-heading" id="menu-title">メニュー</h3>
+          <div class="category-tabs" role="tablist">
+            <button class="tab active" data-category="all" type="button">すべて</button>
+            <button class="tab" data-category="set" type="button">定食</button>
+            <button class="tab" data-category="sushi" type="button">寿司</button>
+          </div>
+          <div class="menu-grid" id="menu-grid"></div>
+        </section>
+
+        <details class="code-table-wrap" open>
+          <summary>番号とメニュー名の一覧</summary>
+          <table class="code-table">
+            <thead><tr><th>番号</th><th>メニュー名</th><th>価格</th></tr></thead>
+            <tbody id="code-table"></tbody>
+          </table>
+        </details>
+      </main>
+
+      <aside class="panel side-panel" aria-labelledby="cart-title">
+        <h3 id="cart-title">🛒 ご注文かご</h3>
+        <p class="cart-note">定食1品と寿司2品の組み合わせがおすすめです。</p>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="total"><span>合計</span><span id="cart-total">¥0</span></div>
+        <button class="primary checkout" id="checkout-button" type="button">お会計へ進む</button>
+        <div class="cart-actions">
+          <button class="secondary" id="clear-button" type="button">かごを空にする</button>
+        </div>
+      </aside>
+    </div>
+
+    <dialog id="payment-dialog">
+      <div class="dialog-body">
+        <h2>お会計（架空）</h2>
+        <p>こちらはデモ画面です。実際の決済は発生しません。</p>
+        <div class="payment-box">
+          <p><span>ご注文点数</span><strong id="payment-count">0点</strong></p>
+          <p><span>お支払い金額</span><strong id="payment-total">¥0</strong></p>
+          <p><span>お支払い方法</span><strong>テーブル会計（デモ）</strong></p>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary" id="cancel-payment" type="button">戻る</button>
+          <button class="primary" id="place-order" type="button">会計して注文する</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="complete-dialog">
+      <div class="dialog-body">
+        <h2 class="success">ご注文ありがとうございます！</h2>
+        <p>ご注文をキッチンへ送信しました。（架空の注文です）</p>
+        <div class="payment-box">
+          <p><span>注文番号</span><strong id="order-number"></strong></p>
+          <p><span>お支払い</span><strong id="complete-total"></strong></p>
+        </div>
+        <button class="primary checkout" id="close-complete" type="button">メニューに戻る</button>
+      </div>
+    </dialog>
+
+    <script>
+      const menu = [
+        { code: "1001", category: "set", icon: "🍱", name: "磯定食", description: "焼き魚・小鉢・みそ汁・ごはん", price: 680 },
+        { code: "1002", category: "set", icon: "🥗", name: "アレルギー定食", description: "やさしい食材の安心定食", price: 720 },
+        { code: "1003", category: "set", icon: "🍚", name: "大盛り定食", description: "ごはん大盛り！お腹いっぱい", price: 780 },
+        { code: "1004", category: "set", icon: "🦐", name: "海鮮だらけ定食", description: "海の幸をたっぷり楽しむ定食", price: 980 },
+        { code: "1005", category: "set", icon: "🍙", name: "子供定食", description: "お子さまに人気のかわいい定食", price: 580 },
+        { code: "1006", category: "set", icon: "🥘", name: "海の中華丼", description: "海鮮あんかけたっぷり中華丼", price: 650 },
+        { code: "1007", category: "set", icon: "🍛", name: "魚カレー", description: "魚フライのせ磯風カレー", price: 620 },
+        { code: "101", category: "sushi", icon: "🍣", name: "ウニ", description: "とろける濃厚な味わい", price: 180 },
+        { code: "102", category: "sushi", icon: "🍣", name: "ハンバーグ", description: "お子さまにも人気の変わり種", price: 100 },
+        { code: "103", category: "sushi", icon: "🍣", name: "サーモン", description: "脂ののった定番ネタ", price: 120 },
+        { code: "104", category: "sushi", icon: "🍣", name: "いくら", description: "ぷちぷちはじける海の宝石", price: 160 },
+        { code: "105", category: "sushi", icon: "🍣", name: "エビ", description: "ぷりぷり食感の人気ネタ", price: 100 },
+        { code: "106", category: "sushi", icon: "🍣", name: "マグロ", description: "赤身のおいしさをシンプルに", price: 120 },
+        { code: "107", category: "sushi", icon: "🍣", name: "納豆", description: "ねばりがおいしい細巻き", price: 80 }
+      ];
+
+      const yen = value => `¥${value.toLocaleString("ja-JP")}`;
+      const cart = [];
+      const grid = document.querySelector("#menu-grid");
+      const table = document.querySelector("#code-table");
+      const cartItems = document.querySelector("#cart-items");
+      const total = document.querySelector("#cart-total");
+      const message = document.querySelector("#code-message");
+
+      function renderMenu(category = "all") {
+        grid.innerHTML = menu
+          .filter(item => category === "all" || item.category === category)
+          .map(item => `
+            <article class="menu-card">
+              <div>
+                <div class="food-icon">${item.icon}</div>
+                <h4>${item.name}</h4>
+                <p>${item.description}</p>
+              </div>
+              <div class="card-bottom">
+                <span class="price">${yen(item.price)}</span>
+                <button class="add-button" data-code="${item.code}" type="button">選ぶ</button>
+              </div>
+            </article>
+          `).join("");
+      }
+
+      function renderTable() {
+        table.innerHTML = menu.map(item => `
+          <tr><td>${item.code}</td><td>${item.name}</td><td>${yen(item.price)}</td></tr>
+        `).join("");
+      }
+
+      function renderCart() {
+        if (!cart.length) {
+          cartItems.innerHTML = '<div class="empty">まだ商品が入っていません。<br>メニューからお選びください。</div>';
+        } else {
+          cartItems.innerHTML = cart.map((item, index) => `
+            <div class="cart-row">
+              <div><strong>${item.name}</strong><small>${item.code}　${yen(item.price)}</small></div>
+              <button class="remove" data-index="${index}" type="button">削除</button>
+            </div>
+          `).join("");
+        }
+        total.textContent = yen(cart.reduce((sum, item) => sum + item.price, 0));
+      }
+
+      function addToCart(code) {
+        const item = menu.find(entry => entry.code === code);
+        if (!item) return;
+        cart.push(item);
+        renderCart();
+        message.textContent = `${item.name}をかごに追加しました。`;
+      }
+
+      document.querySelector("#code-form").addEventListener("submit", event => {
+        event.preventDefault();
+        const input = document.querySelector("#code-input");
+        const item = menu.find(entry => entry.code === input.value.trim());
+        if (!item) {
+          message.textContent = "番号が見つかりません。横の一覧から番号をご確認ください。";
+          return;
+        }
+        message.textContent = `${item.code} ${item.name}　${yen(item.price)}`;
+        addToCart(item.code);
+        input.value = "";
+      });
+
+      grid.addEventListener("click", event => {
+        const button = event.target.closest("[data-code]");
+        if (button) addToCart(button.dataset.code);
+      });
+
+      document.querySelector(".category-tabs").addEventListener("click", event => {
+        const tab = event.target.closest("[data-category]");
+        if (!tab) return;
+        document.querySelectorAll(".tab").forEach(button => button.classList.remove("active"));
+        tab.classList.add("active");
+        renderMenu(tab.dataset.category);
+      });
+
+      cartItems.addEventListener("click", event => {
+        const button = event.target.closest("[data-index]");
+        if (button) {
+          cart.splice(Number(button.dataset.index), 1);
+          renderCart();
+        }
+      });
+
+      document.querySelector("#clear-button").addEventListener("click", () => {
+        cart.length = 0;
+        renderCart();
+        message.textContent = "かごを空にしました。";
+      });
+
+      const paymentDialog = document.querySelector("#payment-dialog");
+      const completeDialog = document.querySelector("#complete-dialog");
+      document.querySelector("#checkout-button").addEventListener("click", () => {
+        if (!cart.length) {
+          message.textContent = "先にメニューをかごへ入れてください。";
+          return;
+        }
+        document.querySelector("#payment-count").textContent = `${cart.length}点`;
+        document.querySelector("#payment-total").textContent = total.textContent;
+        paymentDialog.showModal();
+      });
+      document.querySelector("#cancel-payment").addEventListener("click", () => paymentDialog.close());
+      document.querySelector("#place-order").addEventListener("click", () => {
+        const orderTotal = total.textContent;
+        document.querySelector("#order-number").textContent = String(Math.floor(1000 + Math.random() * 9000));
+        document.querySelector("#complete-total").textContent = orderTotal;
+        paymentDialog.close();
+        completeDialog.showModal();
+        cart.length = 0;
+        renderCart();
+      });
+      document.querySelector("#close-complete").addEventListener("click", () => completeDialog.close());
+
+      renderMenu();
+      renderTable();
+      renderCart();
+    </script>
+  </body>
+</html>
