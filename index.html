@@ -331,12 +331,24 @@
         total.textContent = yen(cart.reduce((sum, item) => sum + item.price, 0));
       }
 
+      function speakItem(item) {
+        if (!("speechSynthesis" in window)) return;
+        window.speechSynthesis.cancel();
+        const speech = new SpeechSynthesisUtterance(
+          `${item.name}、${item.price}円。かごに追加しました。`
+        );
+        speech.lang = "ja-JP";
+        speech.rate = 0.95;
+        window.speechSynthesis.speak(speech);
+      }
+
       function addToCart(code) {
         const item = menu.find(entry => entry.code === code);
         if (!item) return;
         cart.push(item);
         renderCart();
         message.textContent = `${item.name}をかごに追加しました。`;
+        speakItem(item);
       }
 
       document.querySelector("#code-form").addEventListener("submit", event => {
